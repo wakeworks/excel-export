@@ -3,7 +3,7 @@
     "description": "Silverstripe module offering DataFormatters to export DataObjects in Excel format.",
     "type": "silverstripe-vendormodule",
     "require": {
-        "phpoffice/phpspreadsheet": "^1.27.0"
+        "phpoffice/phpspreadsheet": "^5.1.0"
     },
     "license": "MIT",
     "authors": [
