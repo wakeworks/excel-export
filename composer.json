@@ -1,20 +1,22 @@
 {
-    "name": "firebrandhq/silverstripe-excel-export",
+    "name": "atwx/silverstripe-excel-export",
     "description": "Silverstripe module offering DataFormatters to export DataObjects in Excel format.",
     "type": "silverstripe-vendormodule",
     "require": {
-        "phpoffice/phpspreadsheet": "^5.1.0"
+        "phpoffice/phpspreadsheet": "^5.1.0",
+        "silverstripe/cms": "^6.0"
     },
     "license": "MIT",
     "authors": [
+        {
+            "name": "Henrik Bormann",
+            "email": "hb@adiwijaja.com"
+        },
         {
             "name": "Firebrand",
             "email": "hello@firebrand.nz"
         }
     ],
-    "suggest": {
-		"silverstripe/restfulserver": "If you install the restfull server, you'll be able to dynamically generate SpreadSheet on the fly."
-	},
 	"minimum-stability": "dev",
 	"prefer-stable": true,
     "require-dev": {
