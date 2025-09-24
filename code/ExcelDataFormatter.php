@@ -239,7 +239,7 @@ class ExcelDataFormatter extends DataFormatter
         // Add each field to the first row
         foreach (array_keys($fields) as $field) {
             $header = $useLabelsAsHeaders ? $do->fieldLabel($field) : $field;
-            $sheet->setCellValueByColumnAndRow($col, $row, $header);
+            $sheet->setCellValue([$col, $row], $header);
             $col++;
         }
 
@@ -279,7 +279,7 @@ class ExcelDataFormatter extends DataFormatter
                 $value = $item->renderWith($viewer, true);
             }
 
-            $sheet->setCellValueByColumnAndRow($col, $row, $value);
+            $sheet->setCellValue([$col, $row], $value);
             $col++;
         }
 
