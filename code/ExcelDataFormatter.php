@@ -15,18 +15,18 @@
 
 namespace ExcelExport;
 
-use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\View\TemplateEngine;
+
+use SilverStripe\Model\List\SS_List;
+use Override;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use SilverStripe\Control\Controller;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObjectInterface;
-use SilverStripe\ORM\SS_List;
-use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
-use SilverStripe\View\SSViewer;
 use SilverStripe\Core\Config\Config;
 
 class ExcelDataFormatter extends DataFormatter
@@ -46,9 +46,9 @@ class ExcelDataFormatter extends DataFormatter
      */
     public function supportedExtensions()
     {
-        return array(
+        return [
             'xlsx',
-        );
+        ];
     }
 
     /**
@@ -56,9 +56,9 @@ class ExcelDataFormatter extends DataFormatter
      */
     public function supportedMimeTypes()
     {
-        return array(
+        return [
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        );
+        ];
     }
 
     /**
@@ -66,7 +66,7 @@ class ExcelDataFormatter extends DataFormatter
      */
     public function convertDataObject(DataObjectInterface $do)
     {
-        return $this->convertDataObjectSet(new ArrayList(array($do)));
+        return $this->convertDataObjectSet(ArrayList::create([$do]));
     }
 
     /**
@@ -95,15 +95,16 @@ class ExcelDataFormatter extends DataFormatter
     /**
      * @inheritdoc
      */
+    #[Override]
     protected function getFieldsForObj($obj)
     {
-        $dbFields = array();
+        $dbFields = [];
 
         // if custom fields are specified, only select these
         if(is_array($this->customFields)) {
             foreach($this->customFields as $fieldName) {
                 // @todo Possible security risk by making methods accessible - implement field-level security
-                if($obj->hasField($fieldName) || $obj->hasMethod("get{$fieldName}")) {
+                if($obj->hasField($fieldName) || $obj->hasMethod('get' . $fieldName)) {
                     $dbFields[$fieldName] = $fieldName;
                 }
             }
@@ -117,14 +118,14 @@ class ExcelDataFormatter extends DataFormatter
         if(is_array($this->customAddFields)) {
             foreach($this->customAddFields as $fieldName) {
                 // @todo Possible security risk by making methods accessible - implement field-level security
-                if($obj->hasField($fieldName) || $obj->hasMethod("get{$fieldName}")) {
+                if($obj->hasField($fieldName) || $obj->hasMethod('get' . $fieldName)) {
                     $dbFields[$fieldName] = $fieldName;
                 }
             }
         }
 
         // Make sure our ID field is the first one.
-        $dbFields = array('ID' => 'Int') + $dbFields;
+        $dbFields = ['ID' => 'Int'] + $dbFields;
 
         if(is_array($this->removeFields)) {
             $dbFields = array_diff_key($dbFields, array_combine($this->removeFields,$this->removeFields));
@@ -135,7 +136,7 @@ class ExcelDataFormatter extends DataFormatter
 
     /**
      * Generate a {@link Spreadsheet} for the provided DataObject List
-     * @param  SS_List $set List of DataObjects
+     * @param SS_List $set List of DataObjects
      * @return Spreadsheet
      */
     public function getPhpExcelObject(SS_List $set)
@@ -164,7 +165,7 @@ class ExcelDataFormatter extends DataFormatter
             $sheet->freezePane("B2");
 
             // Auto sizing all the columns
-            $col = sizeof($fields);
+            $col = count($fields);
             for ($i = 1; $i <= $col; $i++) {
                 $sheet
                     ->getColumnDimension(
@@ -203,13 +204,13 @@ class ExcelDataFormatter extends DataFormatter
                 'firebrandhq.EXCELEXPORT',
                 '{singular} export',
                 'Title for the spread sheet export',
-                array('singular' => $singular)
+                ['singular' => $singular]
             ))
             ->setDescription(_t(
                 'firebrandhq.EXCELEXPORT',
                 'List of {plural} exported out of a SilverStripe website',
                 'Description for the spread sheet export',
-                array('plural' => $plural)
+                ['plural' => $plural]
             ));
 
         // Give a name to the sheet
@@ -236,7 +237,7 @@ class ExcelDataFormatter extends DataFormatter
         $useLabelsAsHeaders = $this->getUseLabelsAsHeaders();
 
         // Add each field to the first row
-        foreach ($fields as $field => $type) {
+        foreach (array_keys($fields) as $field) {
             $header = $useLabelsAsHeaders ? $do->fieldLabel($field) : $field;
             $sheet->setCellValueByColumnAndRow($col, $row, $header);
             $col++;
@@ -247,8 +248,8 @@ class ExcelDataFormatter extends DataFormatter
         $endcol = Coordinate::stringFromColumnIndex($col);
 
         // Set Autofilters and Header row style
-        $sheet->setAutoFilter("A1:{$endcol}1");
-        $sheet->getStyle("A1:{$endcol}1")->getFont()->setBold(true);
+        $sheet->setAutoFilter(sprintf('A1:%s1', $endcol));
+        $sheet->getStyle(sprintf('A1:%s1', $endcol))->getFont()->setBold(true);
 
 
         return $sheet;
@@ -270,13 +271,14 @@ class ExcelDataFormatter extends DataFormatter
         $row = $sheet->getHighestRow() + 1;
         $col = 1;
 
-        foreach ($fields as $field => $type) {
-            if ($item->hasField($field) || $item->hasMethod("get{$field}")) {
+        foreach (array_keys($fields) as $field) {
+            if ($item->hasField($field) || $item->hasMethod('get' . $field)) {
                 $value = $item->$field;
             } else {
-                $viewer = SSViewer::fromString('$' . $field . '.RAW');
+                $viewer = singleton(TemplateEngine::class)->renderString('$' . $field . '.RAW');
                 $value = $item->renderWith($viewer, true);
             }
+
             $sheet->setCellValueByColumnAndRow($col, $row, $value);
             $col++;
         }
@@ -323,7 +325,7 @@ class ExcelDataFormatter extends DataFormatter
             return $this->useLabelsAsHeaders;
         }
 
-        $useLabelsAsHeaders = Config::inst()->get(__CLASS__, 'UseLabelsAsHeaders');
+        $useLabelsAsHeaders = Config::inst()->get(self::class, 'UseLabelsAsHeaders');
         if ($useLabelsAsHeaders !== null) {
             return $useLabelsAsHeaders;
         }
@@ -340,11 +342,8 @@ class ExcelDataFormatter extends DataFormatter
      */
     public function setUseLabelsAsHeaders($value)
     {
-        if ($value === null) {
-            $this->useLabelsAsHeaders = null;
-        } else {
-            $this->useLabelsAsHeaders = (bool)$value;
-        }
+        $this->useLabelsAsHeaders = $value === null ? null : (bool)$value;
+
         return $this;
     }
 }

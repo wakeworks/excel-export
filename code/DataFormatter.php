@@ -9,10 +9,10 @@
  */
 namespace ExcelExport;
 
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataObjectInterface;
-use SilverStripe\ORM\SS_List;
 
 abstract class DataFormatter
 {
@@ -101,17 +101,20 @@ abstract class DataFormatter
     {
         $classes = ClassInfo::subclassesFor(DataFormatter::class);
         array_shift($classes);
-        $sortedClasses = array();
+        $sortedClasses = [];
         foreach ($classes as $class) {
             $sortedClasses[$class] = singleton($class)->stat('priority');
         }
+
         arsort($sortedClasses);
-        foreach ($sortedClasses as $className => $priority) {
+        foreach (array_keys($sortedClasses) as $className) {
             $formatter = new $className();
             if (in_array($extension, $formatter->supportedExtensions())) {
                 return $formatter;
             }
         }
+
+        return null;
     }
 
     /**
@@ -123,7 +126,9 @@ abstract class DataFormatter
     public static function for_extensions($extensions)
     {
         foreach ($extensions as $extension) {
-            if ($formatter = self::for_extension($extension)) return $formatter;
+            if ($formatter = self::for_extension($extension)) {
+                return $formatter;
+            }
         }
 
         return false;
@@ -139,17 +144,20 @@ abstract class DataFormatter
     {
         $classes = ClassInfo::subclassesFor(DataFormatter::class);
         array_shift($classes);
-        $sortedClasses = array();
+        $sortedClasses = [];
         foreach ($classes as $class) {
             $sortedClasses[$class] = singleton($class)->stat('priority');
         }
+
         arsort($sortedClasses);
-        foreach ($sortedClasses as $className => $priority) {
+        foreach (array_keys($sortedClasses) as $className) {
             $formatter = new $className();
             if (in_array($mimeType, $formatter->supportedMimeTypes())) {
                 return $formatter;
             }
         }
+
+        return null;
     }
 
     /**
@@ -163,7 +171,9 @@ abstract class DataFormatter
     public static function for_mimetypes($mimetypes)
     {
         foreach ($mimetypes as $mimetype) {
-            if ($formatter = self::for_mimetype($mimetype)) return $formatter;
+            if ($formatter = self::for_mimetype($mimetype)) {
+                return $formatter;
+            }
         }
 
         return false;
@@ -266,13 +276,13 @@ abstract class DataFormatter
      */
     protected function getFieldsForObj($obj)
     {
-        $dbFields = array();
+        $dbFields = [];
 
         // if custom fields are specified, only select these
         if (is_array($this->customFields)) {
             foreach ($this->customFields as $fieldName) {
                 // @todo Possible security risk by making methods accessible - implement field-level security
-                if ($obj->hasField($fieldName) || $obj->hasMethod("get{$fieldName}")) {
+                if ($obj->hasField($fieldName) || $obj->hasMethod('get' . $fieldName)) {
                     $dbFields[$fieldName] = $fieldName;
                 }
             }
@@ -284,14 +294,14 @@ abstract class DataFormatter
         if (is_array($this->customAddFields)) {
             foreach ($this->customAddFields as $fieldName) {
                 // @todo Possible security risk by making methods accessible - implement field-level security
-                if ($obj->hasField($fieldName) || $obj->hasMethod("get{$fieldName}")) {
+                if ($obj->hasField($fieldName) || $obj->hasMethod('get' . $fieldName)) {
                     $dbFields[$fieldName] = $fieldName;
                 }
             }
         }
 
         // add default required fields
-        $dbFields = array_merge($dbFields, array('ID' => 'Int'));
+        $dbFields = array_merge($dbFields, ['ID' => 'Int']);
 
         if (is_array($this->removeFields)) {
             $dbFields = array_diff_key($dbFields, array_combine($this->removeFields, $this->removeFields));

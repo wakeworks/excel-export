@@ -12,7 +12,8 @@
 
 namespace ExcelExport;
 
-use SilverStripe\ORM\SS_List;
+use Override;
+use SilverStripe\Model\List\SS_List;
 
 class OldExcelDataFormatter extends ExcelDataFormatter
 {
@@ -20,26 +21,29 @@ class OldExcelDataFormatter extends ExcelDataFormatter
     /**
      * @inheritdoc
      */
+    #[Override]
     public function supportedExtensions()
     {
-        return array(
+        return [
             'xls',
-        );
+        ];
     }
 
     /**
      * @inheritdoc
      */
+    #[Override]
     public function supportedMimeTypes()
     {
-        return array(
+        return [
             'application/vnd.ms-excel',
-        );
+        ];
     }
 
     /**
      * @inheritdoc
      */
+    #[Override]
     public function convertDataObjectSet(SS_List $set)
     {
         $this->setHeader();

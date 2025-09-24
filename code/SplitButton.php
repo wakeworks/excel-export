@@ -12,6 +12,7 @@
 
 namespace ExcelExport;
 
+use Override;
 use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TabSet;
@@ -36,7 +37,7 @@ class SplitButton extends TabSet
         $args = func_get_args();
         $name = array_shift($args);
 
-        if ($args) {
+        if ($args !== []) {
             $title = array_shift($args);
         }
 
@@ -46,10 +47,7 @@ class SplitButton extends TabSet
         }
 
         // Instanciate our undelying tab container
-        $this->tab = new Tab(
-            'SplitButtonTab',
-            $title
-        );
+        $this->tab = Tab::create('SplitButtonTab', $title);
 
         //Call the parent consturctor
         parent::__construct($name, $this->tab);
@@ -59,7 +57,7 @@ class SplitButton extends TabSet
         $this->addExtraClass('ss-ui-action-tabset action-menus ss-ui-button');
 
         // Add any provided button.
-        if ($args) {
+        if ($args !== []) {
             foreach ($args as $button) {
                 // Make sure we only add Form Fields to our tab.
                 $isValidArg =
@@ -77,12 +75,13 @@ class SplitButton extends TabSet
         }
 
         // Define a custom spread sheet so we can style our button.
-        Requirements::css(EXCELEXPORT_DIR . '/css/splitbutton.css');
+        Requirements::css('firebrandhq/silverstripe-excel-export:css/splitbutton.css');
     }
 
     /**
      * @inheritdoc
      */
+    #[Override]
     public function fieldByName($name)
     {
         return $this->tab->fieldByName();
@@ -91,6 +90,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function fieldPosition($field)
     {
         return $this->tab->fieldPosition($field);
@@ -99,6 +99,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function getChildren()
     {
         return $this->tab->getChildren();
@@ -107,6 +108,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function setChildren($children)
     {
         return $this->tab->setChildren($children);
@@ -115,6 +117,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function push(FormField $field)
     {
         return $this->tab->push($field);
@@ -123,6 +126,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function insertBefore($insertBefore, $field, $appendIfMissing = true)
     {
         return $this->tab->insertBefore($insertBefore, $field);
@@ -131,6 +135,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function insertAfter($insertAfter, $field, $appendIfMissing = true)
     {
         return $this->tab->insertAfter($insertAfter, $field);
@@ -139,6 +144,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function removeByName($fieldName, $dataFieldOnly = false)
     {
         return $this->tab->removeByName($fieldName, $dataFieldOnly = false);
@@ -147,6 +153,7 @@ class SplitButton extends TabSet
     /**
      * @inheritdoc
      */
+    #[Override]
     public function replaceField($fieldName, $newField, $dataFieldOnly = true)
     {
         return $this->tab->replaceField($fieldName, $newField);

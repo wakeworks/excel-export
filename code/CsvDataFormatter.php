@@ -11,7 +11,8 @@
  */
 namespace ExcelExport;
 
-use SilverStripe\ORM\SS_List;
+use Override;
+use SilverStripe\Model\List\SS_List;
 
 class CsvDataFormatter extends ExcelDataFormatter
 {
@@ -19,26 +20,29 @@ class CsvDataFormatter extends ExcelDataFormatter
     /**
      * @inheritdoc
      */
+    #[Override]
     public function supportedExtensions()
     {
-        return array(
+        return [
             'csv',
-        );
+        ];
     }
 
     /**
      * @inheritdoc
      */
+    #[Override]
     public function supportedMimeTypes()
     {
-        return array(
+        return [
             'text/csv',
-        );
+        ];
     }
 
     /**
      * @inheritdoc
      */
+    #[Override]
     public function convertDataObjectSet(SS_List $set)
     {
         $this->setHeader();

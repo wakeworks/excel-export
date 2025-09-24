@@ -9,21 +9,15 @@
 namespace ExcelExport;
 
 
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Control\Controller;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridField_ActionProvider;
 use SilverStripe\Forms\GridField\GridField_ColumnProvider;
 use SilverStripe\Forms\GridField\GridField_FormAction;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ValidationException;
 
 class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_ActionProvider {
-
-    /**
-     * The type of file we will be exporting
-     * @var string
-     */
-    protected $exportType;
 
     /**
      * Whatever to override the default $useFieldLabelsAsHeaders value for the DataFormatter.
@@ -37,8 +31,13 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      * @param string $exportType The type of file we will be exporting. Defaults to 'xlsx', but 'csv' and 'xls' are also
      * acceptable.
      */
-    public function __construct($exportType = 'xlsx') {
-        $this->exportType = $exportType;
+    public function __construct(
+        /**
+         * The type of file we will be exporting
+         */
+        protected $exportType = 'xlsx'
+    )
+    {
     }
 
     /**
@@ -62,7 +61,7 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      * @return array
      */
     public function getColumnAttributes($gridField, $record, $columnName) {
-        return array('class' => 'col-buttons');
+        return ['class' => 'col-buttons'];
     }
 
     /**
@@ -74,8 +73,10 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      */
     public function getColumnMetadata($gridField, $columnName) {
         if($columnName == 'Actions') {
-            return array('title' => '');
+            return ['title' => ''];
         }
+
+        return null;
     }
 
     /**
@@ -85,7 +86,7 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      * @return array
      */
     public function getColumnsHandled($gridField) {
-        return array('Actions');
+        return ['Actions'];
     }
 
     /**
@@ -95,7 +96,7 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      * @return array
      */
     public function getActions($gridField) {
-        return array('exportsingle');
+        return ['exportsingle'];
     }
 
     /**
@@ -106,10 +107,12 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      * @return string - the HTML for the column
      */
     public function getColumnContent($gridField, $record, $columnName) {
-        if(!$record->canView()) return;
+        if (!$record->canView()) {
+            return null;
+        }
 
         $field = GridField_FormAction::create($gridField, 'ExportSingle'.$record->ID, false,
-            "exportsingle", array('RecordID' => $record->ID))
+            "exportsingle", ['RecordID' => $record->ID])
             ->addExtraClass('gridfield-button-export-single no-ajax')
             ->setAttribute('title', _t('firebrandhq.EXCELEXPORT', "Export"))
             ->setAttribute('data-icon', 'download-csv');
@@ -130,13 +133,12 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
             // Get the item
             $item = $gridField->getList()->byID($arguments['RecordID']);
             if(!$item) {
-                return;
+                return null;
             }
 
             // Make sure th current user is authorised to view the item.
             if (!$item->canView()) {
-                throw new ValidationException(
-                    _t('firebrandhq.EXCELEXPORT', "Can not view record"),0);
+                throw ValidationException::create(_t('firebrandhq.EXCELEXPORT', "Can not view record"), 0);
             }
 
             // Build a filename
@@ -160,7 +162,7 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
                 default:
                     user_error(
                         "GridFieldExcelExportAction expects \$exportType to be either 'xlsx', 'xls' or 'csv'. " .
-                        "'{$this->exportType}' provided",
+                        sprintf("'%s' provided", $this->exportType),
                         E_USER_ERROR
                     );
             }
@@ -169,11 +171,17 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
             $this->setHeader($gridField, $this->exportType, $filename);
 
             // Export our Data Object
+            if (!isset($formater)) {
+                return null;
+            }
+
             $formater->setUseLabelsAsHeaders($this->useLabelsAsHeaders);
             $fileData = $formater->convertDataObject($item);
 
             return $fileData;
         }
+
+        return null;
     }
 
     /**
@@ -205,11 +213,8 @@ class GridFieldExcelExportAction implements GridField_ColumnProvider, GridField_
      */
     public function setUseLabelsAsHeaders($value)
     {
-        if ($value === null) {
-            $this->useLabelsAsHeaders = null;
-        } else {
-            $this->useLabelsAsHeaders = (bool)$value;
-        }
+        $this->useLabelsAsHeaders = $value === null ? null : (bool)$value;
+
         return $this;
     }
 

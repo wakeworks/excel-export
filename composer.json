@@ -18,5 +18,10 @@
 	"minimum-stability": "dev",
 	"prefer-stable": true,
     "require-dev": {
+    },
+    "extra": {
+        "expose": [
+            "css"
+        ]
     }
 }

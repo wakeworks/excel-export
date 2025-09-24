@@ -16,6 +16,8 @@
 namespace ExcelExport;
 
 
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Forms\GridField\GridField;
@@ -25,8 +27,6 @@ use SilverStripe\Forms\GridField\GridField_HTMLProvider;
 use SilverStripe\Forms\GridField\GridField_URLHandler;
 use SilverStripe\Forms\GridField\GridFieldFilterHeader;
 use SilverStripe\Forms\GridField\GridFieldSortableHeader;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\SS_List;
 
 class GridFieldExcelExportButton implements
     GridField_HTMLProvider,
@@ -41,17 +41,11 @@ class GridFieldExcelExportButton implements
     protected $useLabelsAsHeaders = null;
 
     /**
-     * Fragment to write the button to
-     */
-    protected $targetFragment;
-
-    /**
      * Instanciate GridFieldExcelExportButton.
      * @param string $targetFragment
      */
-    public function __construct($targetFragment = "before")
+    public function __construct(protected $targetFragment = "before")
     {
-        $this->targetFragment = $targetFragment;
     }
 
     /**
@@ -65,47 +59,32 @@ class GridFieldExcelExportButton implements
     public function getHTMLFragments($gridField)
     {
         // Set up the split button
-        $splitButton = new SplitButton('Export', 'Export');
+        $splitButton = SplitButton::create('Export', 'Export');
         $splitButton->setAttribute('data-icon', 'download-csv');
 
         // XLSX option
-        $button = new GridField_FormAction(
-            $gridField,
-            'xlsxexport',
-            _t('firebrandhq.EXCELEXPORT', 'Export to Excel (XLSX)'),
-            'xlsxexport',
-            null
-        );
+        $button = GridField_FormAction::create($gridField, 'xlsxexport', _t('firebrandhq.EXCELEXPORT', 'Export to Excel (XLSX)'), 'xlsxexport', null);
         $button->addExtraClass('no-ajax');
+
         $splitButton->push($button);
 
         // XLS option
-        $button = new GridField_FormAction(
-            $gridField,
-            'xlsexport',
-            _t('firebrandhq.EXCELEXPORT', 'Export to Excel (XLS)'),
-            'xlsexport',
-            null
-        );
+        $button = GridField_FormAction::create($gridField, 'xlsexport', _t('firebrandhq.EXCELEXPORT', 'Export to Excel (XLS)'), 'xlsexport', null);
         $button->addExtraClass('no-ajax');
+
         $splitButton->push($button);
 
         // CSV option
-        $button = new GridField_FormAction(
-            $gridField,
-            'csvexport',
-            _t('firebrandhq.EXCELEXPORT', 'Export to CSV'),
-            'csvexport',
-            null
-        );
+        $button = GridField_FormAction::create($gridField, 'csvexport', _t('firebrandhq.EXCELEXPORT', 'Export to CSV'), 'csvexport', null);
         $button->addExtraClass('no-ajax');
+
         $splitButton->push($button);
 
         // Return the fragment
-        return array(
+        return [
             $this->targetFragment =>
                 $splitButton->Field()
-        );
+        ];
     }
 
     /**
@@ -113,7 +92,7 @@ class GridFieldExcelExportButton implements
      */
     public function getActions($gridField)
     {
-        return array('xlsxexport', 'xlsexport', 'csvexport');
+        return ['xlsxexport', 'xlsexport', 'csvexport'];
     }
 
     /**
@@ -136,6 +115,8 @@ class GridFieldExcelExportButton implements
         if ($actionName == 'csvexport') {
             return $this->handleCsv($gridField);
         }
+
+        return null;
     }
 
     /**
@@ -143,11 +124,11 @@ class GridFieldExcelExportButton implements
      */
     public function getURLHandlers($gridField)
     {
-        return array(
+        return [
             'xlsxexport' => 'handleXlsx',
             'xlsexport' => 'handleXls',
             'csvexport' => 'handleCsv',
-        );
+        ];
     }
 
     /**
@@ -241,7 +222,7 @@ class GridFieldExcelExportButton implements
             }
         }
 
-        $arrayList = new ArrayList();
+        $arrayList = ArrayList::create();
 
         foreach ($items->limit(null) as $item) {
             if (!$item->hasMethod('canView') || $item->canView()) {
@@ -259,11 +240,8 @@ class GridFieldExcelExportButton implements
      */
     public function setUseLabelsAsHeaders($value)
     {
-        if ($value === null) {
-            $this->useLabelsAsHeaders = null;
-        } else {
-            $this->useLabelsAsHeaders = (bool)$value;
-        }
+        $this->useLabelsAsHeaders = $value === null ? null : (bool)$value;
+
         return $this;
     }
 
