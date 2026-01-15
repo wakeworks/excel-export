@@ -17,7 +17,7 @@ namespace ExcelExport;
 
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\View\TemplateEngine;
-
+use SilverStripe\View\ViewLayerData;
 use SilverStripe\Model\List\SS_List;
 use Override;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -275,8 +275,7 @@ class ExcelDataFormatter extends DataFormatter
             if ($item->hasField($field) || $item->hasMethod('get' . $field)) {
                 $value = $item->$field;
             } else {
-                $viewer = singleton(TemplateEngine::class)->renderString('$' . $field . '.RAW');
-                $value = $item->renderWith($viewer, true);
+                $value = singleton(TemplateEngine::class)->renderString('$' . $field . '.RAW', new ViewLayerData($item));
             }
 
             $sheet->setCellValue([$col, $row], $value);
